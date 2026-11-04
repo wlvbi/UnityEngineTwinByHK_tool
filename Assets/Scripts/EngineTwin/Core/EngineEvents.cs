@@ -24,6 +24,8 @@ namespace EngineTwin
         CoolantLeak = 1 << 0,       // 冷却液泄漏 → 过热
         OilPumpWear = 1 << 1,       // 机油泵磨损 → 低油压
         AlternatorFailure = 1 << 2, // 发电机故障 → 电压下降
+        OilLeak = 1 << 3,           // 漏油 → 油位下降、油压降低、油温升高
+        BearingWear = 1 << 4,       // 曲轴轴承磨损 → 振动加剧
     }
 
     public struct Event_FaultsChanged

@@ -14,6 +14,7 @@ namespace EngineTwin
         ExhaustTemp,
         BatteryVoltage,
         FuelPressure,
+        Vibration,
     }
 
     public enum SensorLevel
@@ -46,14 +47,18 @@ namespace EngineTwin
         public float Normalize(float v) => Mathf.Clamp01(Mathf.InverseLerp(Min, Max, v));
 
         /// <param name="checkLow">低限判断是否生效（停机时机油压力/燃油压力为 0 属正常）</param>
-        public SensorLevel Evaluate(float v, bool checkLow)
+        /// <param name="margin">回差：阈值向「更严重」方向放宽 margin，用于判断能否从报警恢复，避免在阈值附近反复跳变</param>
+        public SensorLevel Evaluate(float v, bool checkLow, float margin = 0f)
         {
-            if (!float.IsNaN(AlarmHigh) && v >= AlarmHigh) return SensorLevel.Alarm;
-            if (checkLow && !float.IsNaN(AlarmLow) && v <= AlarmLow) return SensorLevel.Alarm;
-            if (!float.IsNaN(WarnHigh) && v >= WarnHigh) return SensorLevel.Warning;
-            if (checkLow && !float.IsNaN(WarnLow) && v <= WarnLow) return SensorLevel.Warning;
+            if (!float.IsNaN(AlarmHigh) && v >= AlarmHigh - margin) return SensorLevel.Alarm;
+            if (checkLow && !float.IsNaN(AlarmLow) && v <= AlarmLow + margin) return SensorLevel.Alarm;
+            if (!float.IsNaN(WarnHigh) && v >= WarnHigh - margin) return SensorLevel.Warning;
+            if (checkLow && !float.IsNaN(WarnLow) && v <= WarnLow + margin) return SensorLevel.Warning;
             return SensorLevel.Normal;
         }
+
+        /// <summary>回差宽度：量程的 3%</summary>
+        public float Hysteresis => (Max - Min) * 0.03f;
     }
 
     public static class SensorCatalog
@@ -75,6 +80,7 @@ namespace EngineTwin
             new SensorSpec(SensorId.ExhaustTemp,    "排气温度",   "°C",  0, 1000, "F0", Orange, warnHigh: 850, alarmHigh: 920),
             new SensorSpec(SensorId.BatteryVoltage, "发电电压",   "V",   10, 16,  "F2", Violet, warnLow: 13.0f, alarmLow: 12.2f, warnHigh: 14.8f, alarmHigh: 15.2f),
             new SensorSpec(SensorId.FuelPressure,   "燃油压力",   "kPa", 0, 500,  "F0", Yellow, warnLow: 320, alarmLow: 260),
+            new SensorSpec(SensorId.Vibration,      "振动烈度",   "mm/s", 0, 20,  "F1", Violet, warnHigh: 7f, alarmHigh: 11f),
         };
 
         static readonly Dictionary<SensorId, SensorSpec> map = BuildMap();

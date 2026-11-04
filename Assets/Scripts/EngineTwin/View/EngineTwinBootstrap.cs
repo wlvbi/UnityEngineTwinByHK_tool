@@ -25,6 +25,11 @@ namespace EngineTwin
         [SerializeField] HK_Curve2D curvePrefab;
         [SerializeField] TMP_FontAsset uiFont;
 
+        [Header("剖切与特效资源（打包时需要被引用才会包含）")]
+        [SerializeField] Shader clipShader;
+        [SerializeField] Material fxAlphaMaterial;
+        [SerializeField] Material fxAdditiveMaterial;
+
         IEngineSimulationSystem simulation;
 
         void Awake()
@@ -55,17 +60,51 @@ namespace EngineTwin
                 orbit = viewCamera.gameObject.AddComponent<EngineOrbitCamera>();
             orbit.Init(center);
 
+            // 拆装分组 → 运转动画（重建皮带） → 剖切材质（需包含新皮带） → 标签（挂到部件分组下）
+            var assembly = gameObject.AddComponent<EngineAssembly>();
+            assembly.Init(engineRoot, parts, center);
+
+            // 加载保存的部件位置
+            var savedLayout = PartPositionPersistence.Load();
+            if (savedLayout != null)
+            {
+                PartPositionPersistence.Apply(savedLayout, assembly, parts);
+            }
+
+            var motion = gameObject.AddComponent<EngineMotion>();
+            motion.Init(engineRoot, assembly, parts.Find(p => p.Id == "beltdrive"));
+
+            var section = gameObject.AddComponent<EngineSection>();
+            section.Init(engineRoot, parts, clipShader);
+            section.Include(motion.Internals);   // 内部机构同样被剖开，呈现真实的剖视效果
+
             var tips = gameObject.AddComponent<EngineTipPresenter>();
             tips.Spawn(tipPrefab, engineRoot, center, font);
 
             gameObject.AddComponent<EngineHighlighter>().Init();
             gameObject.AddComponent<EnginePicker>().Init(viewCamera);
-            gameObject.AddComponent<EngineDashboard>().Build(curvePrefab, tips);
+
+            var dragger = gameObject.AddComponent<EnginePartDragger>();
+            dragger.Init(viewCamera, assembly, engineRoot);
+
+            var effects = gameObject.AddComponent<EngineEffects>();
+            effects.Init(engineRoot, partModel, fxAlphaMaterial, fxAdditiveMaterial);
+
+            var holographic = gameObject.AddComponent<HolographicDisplay>();
+            holographic.Init(engineRoot);
+
+            gameObject.AddComponent<EngineDashboard>().Build(curvePrefab, tips, assembly, section, effects, holographic);
 
             partModel.Selected.Register(p =>
             {
-                if (p != null) orbit.Focus(p.Bounds);
+                if (p != null) orbit.Focus(p.GetWorldBounds());
             }).UnRegisterWhenGameObjectDestroyed(gameObject);
+
+            // 拆下/装回后重新聚焦到部件新位置
+            assembly.DetachChanged += (p, _) =>
+            {
+                if (p == partModel.Selected.Value) StartCoroutine(RefocusLater(orbit, p));
+            };
 
             simulation = this.GetSystem<IEngineSimulationSystem>();
         }
@@ -73,6 +112,12 @@ namespace EngineTwin
         void Update()
         {
             simulation?.Tick(Time.deltaTime);
+        }
+
+        System.Collections.IEnumerator RefocusLater(EngineOrbitCamera orbit, EnginePart part)
+        {
+            yield return new WaitForSecondsRealtime(0.6f);
+            orbit.Focus(part.GetWorldBounds());
         }
 
         bool Validate()

@@ -21,6 +21,13 @@ namespace EngineTwin
         float homeYaw, homePitch, homeDistance;
         bool initialized, dragging;
         int dragButton;
+        bool locked; // 外部锁定标志，用于拖拽部件时禁用相机
+
+        /// <summary>锁定相机（拖拽部件时调用）</summary>
+        public void Lock() => locked = true;
+
+        /// <summary>解锁相机</summary>
+        public void Unlock() => locked = false;
 
         public void Init(Vector3 pivotPoint)
         {
@@ -67,6 +74,13 @@ namespace EngineTwin
 
         void HandleMouse(Mouse mouse)
         {
+            // 如果相机被锁定，跳过所有输入处理
+            if (locked)
+            {
+                dragging = false;
+                return;
+            }
+
             bool overUI = EventSystem.current != null && EventSystem.current.IsPointerOverGameObject();
 
             if (!dragging && !overUI)

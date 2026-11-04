@@ -90,8 +90,14 @@ namespace EngineTwin
                 float v = values[spec.Id];
                 histories[spec.Id].Add(v);
 
-                SensorLevel now = spec.Evaluate(v, checkLow);
                 SensorLevel before = levels[spec.Id];
+                SensorLevel now = spec.Evaluate(v, checkLow);
+                // 等级降低（好转）时要求越过回差带，防止在阈值附近来回报警
+                if (now < before && checkLow == lastCheckLow)
+                {
+                    SensorLevel sticky = spec.Evaluate(v, checkLow, spec.Hysteresis);
+                    if (sticky > now) now = sticky < before ? sticky : before;
+                }
                 if (now == before) continue;
 
                 levels[spec.Id] = now;
@@ -102,6 +108,9 @@ namespace EngineTwin
             }
 
             this.SendEvent<Event_TelemetrySampled>();
+            lastCheckLow = checkLow;
         }
+
+        bool lastCheckLow;
     }
 }

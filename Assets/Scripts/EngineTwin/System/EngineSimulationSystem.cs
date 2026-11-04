@@ -10,6 +10,10 @@ namespace EngineTwin
     public interface IEngineSimulationSystem : ISystem
     {
         EngineFault ActiveFaults { get; }
+        /// <summary>机油油位 0~1（漏油时下降，清除故障 = 维修加油）</summary>
+        float OilLevel { get; }
+        /// <summary>轴承磨损程度 0~1（磨损故障时累积，清除故障 = 更换轴承）</summary>
+        float Wear { get; }
         void Tick(float deltaTime);
         void SetFault(EngineFault fault, bool active);
         void ClearFaults();
@@ -24,9 +28,11 @@ namespace EngineTwin
         float simTime, sampleTimer, batteryDrain, runningTime;
 
         // 物理状态（未加噪声）
-        float throttle, rpm, map = 101f, coolant = Ambient, oilTemp = Ambient, oilPressure, egt = Ambient, voltage = 12.6f, fuelPressure;
+        float throttle, rpm, map = 101f, coolant = Ambient, oilTemp = Ambient, oilPressure, egt = Ambient, voltage = 12.6f, fuelPressure, vibration;
 
         public EngineFault ActiveFaults { get; private set; }
+        public float OilLevel { get; private set; } = 1f;
+        public float Wear { get; private set; }
 
         protected override void OnInit()
         {
@@ -48,6 +54,8 @@ namespace EngineTwin
             if (ActiveFaults == EngineFault.None) return;
             ActiveFaults = EngineFault.None;
             batteryDrain = 0f;
+            OilLevel = 1f;   // 维修：补加机油
+            Wear = 0f;       // 维修：更换轴承
             this.SendEvent(new Event_FaultsChanged { Faults = ActiveFaults });
         }
 
@@ -85,6 +93,8 @@ namespace EngineTwin
             coolant = Lag(coolant, coolantTarget, dt, running ? 22f : 90f);
 
             float oilTarget = running ? coolant + 6f + 18f * load : Ambient;
+            if (Has(EngineFault.OilLeak)) OilLevel = Mathf.Max(0.05f, OilLevel - dt * 0.008f);
+            if (running) oilTarget += (1f - OilLevel) * 35f;   // 油量不足 → 散热变差
             oilTemp = Lag(oilTemp, oilTarget, dt, 30f);
 
             float oilPressureTarget = 0f;
@@ -92,8 +102,14 @@ namespace EngineTwin
             {
                 oilPressureTarget = 120f + rpm * 0.075f + Mathf.Max(0f, 80f - oilTemp) * 1.5f - Mathf.Max(0f, oilTemp - 100f) * 1.2f;
                 if (Has(EngineFault.OilPumpWear)) oilPressureTarget *= 0.4f;
+                oilPressureTarget *= Mathf.Lerp(0.25f, 1f, Mathf.InverseLerp(0.15f, 0.7f, OilLevel));
             }
             oilPressure = Lag(oilPressure, oilPressureTarget, dt, 0.25f);
+
+            if (running && Has(EngineFault.BearingWear)) Wear = Mathf.Min(1f, Wear + dt * 0.012f);
+            float rpmN = rpm / 6500f;
+            float vibrationTarget = running ? 1.6f + 1.4f * rpmN + Wear * 13f * (0.45f + rpmN) : 0f;
+            vibration = Lag(vibration, vibrationTarget, dt, 0.4f);
 
             float egtTarget = running ? 330f + 470f * load + rpm * 0.025f : Ambient;
             egt = Lag(egt, egtTarget, dt, running ? 1.6f : 25f);
@@ -133,6 +149,7 @@ namespace EngineTwin
             model.SetValue(SensorId.ExhaustTemp, egt + Noise(6, 3f * n));
             model.SetValue(SensorId.BatteryVoltage, voltage + Noise(7, 0.02f));
             model.SetValue(SensorId.FuelPressure, Mathf.Max(0f, fuelPressure + Noise(8, 3f * n)));
+            model.SetValue(SensorId.Vibration, Mathf.Max(0f, vibration + Noise(9, (0.2f + Wear * 1.5f) * n)));
         }
 
         /// <summary>平滑随机噪声（Perlin），避免数值每帧乱跳</summary>

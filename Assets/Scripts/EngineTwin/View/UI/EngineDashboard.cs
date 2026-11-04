@@ -13,13 +13,23 @@ namespace EngineTwin
     public class EngineDashboard : EngineTwinController
     {
         const int MaxLogLines = 9;
+        const float BarHeight = 132f;
+        const float PanelBottom = 16f + BarHeight + 12f;
         static readonly SensorId[] OverviewSensors = { SensorId.Rpm, SensorId.CoolantTemp, SensorId.OilPressure };
 
         IEngineTelemetryModel telemetry;
         IEnginePartModel partModel;
         IEngineSimulationSystem simulation;
         EngineTipPresenter tipPresenter;
+        EngineAssembly assembly;
+        EngineSection section;
+        EngineEffects effects;
+        HolographicDisplay holographic;
         HK_Curve2D curvePrefab;
+
+        TextMeshProUGUI detachLabel;
+        Slider explodeSlider, sectionSlider;
+        Toggle sectionToggle;
 
         readonly Dictionary<SensorId, TextMeshProUGUI> rowValues = new Dictionary<SensorId, TextMeshProUGUI>();
         readonly Dictionary<SensorId, Image> rowDots = new Dictionary<SensorId, Image>();
@@ -31,10 +41,14 @@ namespace EngineTwin
         Slider throttleSlider;
         Toggle autoToggle;
 
-        public void Build(HK_Curve2D curve2DPrefab, EngineTipPresenter tips)
+        public void Build(HK_Curve2D curve2DPrefab, EngineTipPresenter tips, EngineAssembly engineAssembly, EngineSection engineSection, EngineEffects engineEffects, HolographicDisplay holographicDisplay)
         {
             curvePrefab = curve2DPrefab;
             tipPresenter = tips;
+            assembly = engineAssembly;
+            section = engineSection;
+            effects = engineEffects;
+            holographic = holographicDisplay;
             telemetry = this.GetModel<IEngineTelemetryModel>();
             partModel = this.GetModel<IEnginePartModel>();
             simulation = this.GetSystem<IEngineSimulationSystem>();
@@ -144,7 +158,7 @@ namespace EngineTwin
             panel.rectTransform.anchorMin = new Vector2(0, 0);
             panel.rectTransform.anchorMax = new Vector2(0, 1);
             panel.rectTransform.pivot = new Vector2(0, 1);
-            panel.rectTransform.offsetMin = new Vector2(16, 108);
+            panel.rectTransform.offsetMin = new Vector2(16, PanelBottom);
             panel.rectTransform.offsetMax = new Vector2(16 + 340, -top);
 
             var header = UIFactory.Label(panel.transform, "Header", "事件记录", 19, UIFactory.Accent, bold: true);
@@ -163,7 +177,7 @@ namespace EngineTwin
             panel.rectTransform.anchorMin = new Vector2(1, 0);
             panel.rectTransform.anchorMax = new Vector2(1, 1);
             panel.rectTransform.pivot = new Vector2(1, 1);
-            panel.rectTransform.offsetMin = new Vector2(-16 - 480, 108);
+            panel.rectTransform.offsetMin = new Vector2(-16 - 480, PanelBottom);
             panel.rectTransform.offsetMax = new Vector2(-16, -76);
             UIFactory.VLayout(panel.gameObject, 8, new RectOffset(16, 16, 12, 16));
 
@@ -178,38 +192,110 @@ namespace EngineTwin
             UIFactory.Size(partDesc, height: 46);
 
             for (int i = 0; i < 3; i++)
-                charts.Add(HKCurveChart.Create(panel.transform, curvePrefab, 180));
+                charts.Add(HKCurveChart.Create(panel.transform, curvePrefab, 160));
         }
 
         void BuildControlBar(Transform root)
         {
             Image bar = UIFactory.Panel(root, "ControlBar", UIFactory.PanelColor);
-            UIFactory.Place(bar.rectTransform, new Vector2(0, 0), new Vector2(1, 0), new Vector2(0.5f, 0), new Vector2(0, 0), new Vector2(-32, 80));
-            bar.rectTransform.anchoredPosition = new Vector2(0, 16);
-            UIFactory.HLayout(bar.gameObject, 12, new RectOffset(18, 18, 0, 0));
-            Transform t = bar.transform;
+            UIFactory.Place(bar.rectTransform, new Vector2(0, 0), new Vector2(1, 0), new Vector2(0.5f, 0), new Vector2(0, 16), new Vector2(-32, BarHeight));
+            UIFactory.VLayout(bar.gameObject, 4, new RectOffset(18, 18, 8, 8), TextAnchor.MiddleLeft);
 
-            var runBtn = UIFactory.Button(t, "RunButton", "停机", () => this.SendCommand(new CMD_SetEngineRunning(!telemetry.IsRunning.Value)), 96);
+            // ---------- 第一行：运行控制 + 故障注入 ----------
+            Transform t = Row(bar.transform, "Row_Engine");
+            var runBtn = UIFactory.Button(t, "RunButton", "停机", () => this.SendCommand(new CMD_SetEngineRunning(!telemetry.IsRunning.Value)), 90);
             runLabel = runBtn.GetComponentInChildren<TextMeshProUGUI>();
-
-            autoToggle = UIFactory.Toggle(t, "AutoCycle", "自动工况", true, on => this.SendCommand(new CMD_SetAutoCycle(on)), 120);
-
-            var thrLabel = UIFactory.Label(t, "ThrottleLabel", "节气门", 17, UIFactory.TextMain);
-            UIFactory.Size(thrLabel, 58, 40);
-            throttleSlider = UIFactory.Slider(t, "Throttle", 220, 0, 100, v => this.SendCommand(new CMD_SetThrottle(v)));
+            autoToggle = UIFactory.Toggle(t, "AutoCycle", "自动工况", true, on => this.SendCommand(new CMD_SetAutoCycle(on)), 116);
+            Caption(t, "节气门", 56);
+            throttleSlider = UIFactory.Slider(t, "Throttle", 200, 0, 100, v => this.SendCommand(new CMD_SetThrottle(v)));
             throttleValue = UIFactory.Label(t, "ThrottleValue", "0%", 17, UIFactory.Accent, TextAlignmentOptions.MidlineLeft, true);
-            UIFactory.Size(throttleValue, 54, 40);
+            UIFactory.Size(throttleValue, 50, 40);
 
             Separator(t);
+            Caption(t, "故障注入", 74);
             FaultButton(t, "冷却液泄漏", EngineFault.CoolantLeak);
             FaultButton(t, "机油泵磨损", EngineFault.OilPumpWear);
+            FaultButton(t, "漏油", EngineFault.OilLeak);
+            FaultButton(t, "轴承磨损", EngineFault.BearingWear);
             FaultButton(t, "发电机故障", EngineFault.AlternatorFailure);
-            UIFactory.Button(t, "ClearFaults", "清除故障", () => this.SendCommand(new CMD_ClearFaults()), 100);
+            UIFactory.Button(t, "ClearFaults", "维修复位", () => this.SendCommand(new CMD_ClearFaults()), 100);
+
+            // ---------- 第二行：视图工具 ----------
+            t = Row(bar.transform, "Row_View");
+            Caption(t, "标签", 40);
+            UIFactory.Button(t, "TipsKey", "关键", () => tipPresenter.ShowKeyTipsOnly(), 64);
+            UIFactory.Button(t, "TipsAll", "全部", () => tipPresenter.ShowAllTips(), 64);
+            UIFactory.Button(t, "TipsHide", "隐藏", () => tipPresenter.HideAllTips(), 64);
 
             Separator(t);
-            UIFactory.Button(t, "TipsKey", "关键标签", () => tipPresenter.ShowKeyTipsOnly(), 100);
-            UIFactory.Button(t, "TipsAll", "全部标签", () => tipPresenter.ShowAllTips(), 100);
-            UIFactory.Button(t, "TipsHide", "隐藏标签", () => tipPresenter.HideAllTips(), 100);
+            Caption(t, "爆炸视图", 74);
+            explodeSlider = UIFactory.Slider(t, "Explode", 150, 0, 1, v => assembly.SetExplode(v));
+            var detachBtn = UIFactory.Button(t, "Detach", "拆下部件", ToggleDetachSelected, 104);
+            detachLabel = detachBtn.GetComponentInChildren<TextMeshProUGUI>();
+            UIFactory.Button(t, "Reassemble", "全部装回", () =>
+            {
+                assembly.ReassembleAll();
+                explodeSlider.SetValueWithoutNotify(0f);
+            }, 100);
+            UIFactory.Button(t, "ResetLayout", "恢复默认", () =>
+            {
+                assembly.ResetAllToDefault();
+                PartPositionPersistence.Clear();
+                AddLog("已恢复所有部件到默认位置", UIFactory.Accent);
+            }, 100);
+
+            Separator(t);
+            sectionToggle = UIFactory.Toggle(t, "Section", "剖切", false, on => section.SetOn(on), 76);
+            UIFactory.Button(t, "SectionX", "纵剖", () => { section.SetAxis(EngineSection.CutAxis.Longitudinal); EnableSection(); }, 64);
+            UIFactory.Button(t, "SectionZ", "横剖", () => { section.SetAxis(EngineSection.CutAxis.Transverse); EnableSection(); }, 64);
+            sectionSlider = UIFactory.Slider(t, "SectionPos", 150, 0, 1, v => section.SetPosition(v));
+            sectionSlider.SetValueWithoutNotify(section.Position01);
+
+            Separator(t);
+            UIFactory.Toggle(t, "Airflow", "进排气粒子", true, on => effects.SetAirflow(on), 130);
+
+            Separator(t);
+            Caption(t, "全息效果", 74);
+            UIFactory.Toggle(t, "Holographic", "全息模式", false, on => holographic.SetHolographicMode(on), 100);
+        }
+
+        static Transform Row(Transform parent, string name)
+        {
+            RectTransform row = UIFactory.Rect(name, parent);
+            UIFactory.Size(row, height: 54);
+            UIFactory.HLayout(row.gameObject, 10, new RectOffset(0, 0, 0, 0));
+            return row;
+        }
+
+        static void Caption(Transform parent, string text, float width)
+        {
+            var l = UIFactory.Label(parent, "Caption", text, 16, UIFactory.TextDim);
+            UIFactory.Size(l, width, 40);
+        }
+
+        void EnableSection()
+        {
+            sectionToggle.SetIsOnWithoutNotify(true);
+            section.SetOn(true);
+        }
+
+        void ToggleDetachSelected()
+        {
+            EnginePart p = partModel.Selected.Value;
+            if (p == null || !assembly.CanDetach(p))
+            {
+                AddLog(p == null ? "请先选择要拆装的部件" : $"{p.DisplayName}为基础件，不可拆下", UIFactory.TextDim, telemetry.SimTime);
+                return;
+            }
+            bool detached = assembly.ToggleDetach(p);
+            AddLog($"{(detached ? "拆下" : "装回")}：{p.DisplayName}", UIFactory.Accent, telemetry.SimTime);
+            RefreshDetachLabel(p);
+        }
+
+        void RefreshDetachLabel(EnginePart p)
+        {
+            if (detachLabel == null) return;
+            detachLabel.text = p != null && assembly.IsDetached(p) ? "装回部件" : "拆下部件";
         }
 
         void FaultButton(Transform parent, string label, EngineFault fault)
@@ -275,6 +361,8 @@ namespace EngineTwin
             if ((faults & EngineFault.CoolantLeak) != 0) sb.Append("冷却液泄漏 ");
             if ((faults & EngineFault.OilPumpWear) != 0) sb.Append("机油泵磨损 ");
             if ((faults & EngineFault.AlternatorFailure) != 0) sb.Append("发电机故障 ");
+            if ((faults & EngineFault.OilLeak) != 0) sb.Append("漏油 ");
+            if ((faults & EngineFault.BearingWear) != 0) sb.Append("轴承磨损 ");
             return sb.ToString().TrimEnd() + "</color>";
         }
 
@@ -303,6 +391,7 @@ namespace EngineTwin
             }
 
             RefreshPartStatus(part);
+            RefreshDetachLabel(part);
         }
 
         void RefreshPartStatus(EnginePart part)
@@ -316,9 +405,10 @@ namespace EngineTwin
 
             SensorLevel level = part.GetLevel(telemetry);
             string hex = ColorUtility.ToHtmlStringRGB(SensorCatalog.LevelColor(level));
-            partStatus.text = part.HasSensors
+            string detached = assembly != null && assembly.IsDetached(part) ? "   ·   <color=#3AC2FF>已拆下</color>" : "";
+            partStatus.text = (part.HasSensors
                 ? $"状态 <color=#{hex}>{SensorCatalog.LevelText(level)}</color>   ·   监测 {part.Info.sensors.Length} 路传感器"
-                : "状态 <color=#8FA3B5>无传感器（结构件）</color>";
+                : "状态 <color=#8FA3B5>无传感器（结构件）</color>") + detached;
             partStatus.color = UIFactory.TextMain;
         }
 

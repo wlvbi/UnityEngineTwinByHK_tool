@@ -17,6 +17,10 @@ PrefabInstance:
       value: 
       objectReference: {fileID: 2100000, guid: 9dabf0b338715e54b82521488d39ca86, type: 2}
     - target: {fileID: 3206970142326435708, guid: 01bd0cd0b102c794e8a1c88869d02f7a, type: 3}
+      propertyPath: m_Parameters.widthMultiplier
+      value: 0.0035
+      objectReference: {fileID: 0}
+    - target: {fileID: 3206970142326435708, guid: 01bd0cd0b102c794e8a1c88869d02f7a, type: 3}
       propertyPath: m_Parameters.colorGradient.key0.g
       value: 1
       objectReference: {fileID: 0}
@@ -34,11 +38,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3287962394118762717, guid: 01bd0cd0b102c794e8a1c88869d02f7a, type: 3}
       propertyPath: maximum
-      value: 1.35
+      value: 2.5317917
       objectReference: {fileID: 0}
     - target: {fileID: 3287962394118762717, guid: 01bd0cd0b102c794e8a1c88869d02f7a, type: 3}
       propertyPath: minimum
-      value: 0.75
+      value: 1.9317918
       objectReference: {fileID: 0}
     - target: {fileID: 3287962394118762717, guid: 01bd0cd0b102c794e8a1c88869d02f7a, type: 3}
       propertyPath: camRange.x
@@ -60,14 +64,38 @@ PrefabInstance:
       propertyPath: lineDefaultWidth
       value: 0.0035
       objectReference: {fileID: 0}
+    - target: {fileID: 4257366175525536573, guid: 01bd0cd0b102c794e8a1c88869d02f7a, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 0.49000022
+      objectReference: {fileID: 0}
+    - target: {fileID: 4257366175525536573, guid: 01bd0cd0b102c794e8a1c88869d02f7a, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 1.2727273
+      objectReference: {fileID: 0}
+    - target: {fileID: 4257366175525536573, guid: 01bd0cd0b102c794e8a1c88869d02f7a, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0.22
+      objectReference: {fileID: 0}
+    - target: {fileID: 4276356632406548483, guid: 01bd0cd0b102c794e8a1c88869d02f7a, type: 3}
+      propertyPath: m_text
+      value: "\u66F2\u8F74\u51CF\u9707\u8F6E\r\n<size=78%><color=#9EE6FF>2878 rpm</color></size>"
+      objectReference: {fileID: 0}
     - target: {fileID: 4276356632406548483, guid: 01bd0cd0b102c794e8a1c88869d02f7a, type: 3}
       propertyPath: m_fontSize
-      value: 50
+      value: 18
       objectReference: {fileID: 0}
     - target: {fileID: 4276356632406548483, guid: 01bd0cd0b102c794e8a1c88869d02f7a, type: 3}
       propertyPath: m_fontAsset
       value: 
       objectReference: {fileID: 11400000, guid: 7aeca53562af8c549aaad40450ffb6ae, type: 2}
+    - target: {fileID: 4276356632406548483, guid: 01bd0cd0b102c794e8a1c88869d02f7a, type: 3}
+      propertyPath: m_fontSizeMax
+      value: 18
+      objectReference: {fileID: 0}
+    - target: {fileID: 4276356632406548483, guid: 01bd0cd0b102c794e8a1c88869d02f7a, type: 3}
+      propertyPath: m_fontSizeMin
+      value: 12
+      objectReference: {fileID: 0}
     - target: {fileID: 4276356632406548483, guid: 01bd0cd0b102c794e8a1c88869d02f7a, type: 3}
       propertyPath: m_lineSpacing
       value: -10
@@ -77,12 +105,20 @@ PrefabInstance:
       value: 50
       objectReference: {fileID: 0}
     - target: {fileID: 4276356632406548483, guid: 01bd0cd0b102c794e8a1c88869d02f7a, type: 3}
+      propertyPath: m_overflowMode
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 4276356632406548483, guid: 01bd0cd0b102c794e8a1c88869d02f7a, type: 3}
       propertyPath: m_sharedMaterial
       value: 
       objectReference: {fileID: -3449380035635908165, guid: 7aeca53562af8c549aaad40450ffb6ae, type: 2}
     - target: {fileID: 4276356632406548483, guid: 01bd0cd0b102c794e8a1c88869d02f7a, type: 3}
       propertyPath: m_TextWrappingMode
-      value: 0
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 4276356632406548483, guid: 01bd0cd0b102c794e8a1c88869d02f7a, type: 3}
+      propertyPath: m_enableAutoSizing
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 5036802811528258620, guid: 01bd0cd0b102c794e8a1c88869d02f7a, type: 3}
       propertyPath: m_LocalScale.x
@@ -136,6 +172,26 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 5441943332186512607, guid: 01bd0cd0b102c794e8a1c88869d02f7a, type: 3}
+      propertyPath: m_SizeDelta.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5441943332186512607, guid: 01bd0cd0b102c794e8a1c88869d02f7a, type: 3}
+      propertyPath: m_SizeDelta.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5441943332186512607, guid: 01bd0cd0b102c794e8a1c88869d02f7a, type: 3}
+      propertyPath: m_LocalScale.x
+      value: -0.08
+      objectReference: {fileID: 0}
+    - target: {fileID: 5441943332186512607, guid: 01bd0cd0b102c794e8a1c88869d02f7a, type: 3}
+      propertyPath: m_LocalScale.y
+      value: 0.08
+      objectReference: {fileID: 0}
+    - target: {fileID: 5441943332186512607, guid: 01bd0cd0b102c794e8a1c88869d02f7a, type: 3}
+      propertyPath: m_LocalScale.z
+      value: 0.08
+      objectReference: {fileID: 0}
     - target: {fileID: 5999902386006693482, guid: 01bd0cd0b102c794e8a1c88869d02f7a, type: 3}
       propertyPath: m_Name
       value: EngineTip
@@ -147,5 +203,27 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 2147542881126231282, guid: 01bd0cd0b102c794e8a1c88869d02f7a, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 5919734319831754334}
   m_SourcePrefab: {fileID: 100100000, guid: 01bd0cd0b102c794e8a1c88869d02f7a, type: 3}
+--- !u!1 &628237838860508634 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 2147542881126231282, guid: 01bd0cd0b102c794e8a1c88869d02f7a, type: 3}
+  m_PrefabInstance: {fileID: 1547663922206601512}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &5919734319831754334
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 628237838860508634}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3245ec927659c4140ac4f8d17403cc18, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.ContentSizeFitter
+  m_HorizontalFit: 2
+  m_VerticalFit: 2

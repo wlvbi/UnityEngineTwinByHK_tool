@@ -194,7 +194,20 @@ namespace EngineTwin.Editor
         {
             string path = OutDir + "/Data/EnginePartCatalog.asset";
             var catalog = AssetDatabase.LoadAssetAtPath<EnginePartCatalog>(path);
-            if (catalog != null) return catalog;   // 已存在则保留用户在 Inspector 里的修改
+            if (catalog != null)
+            {
+                // 保留用户修改，只把新版本默认目录中新增的传感器绑定合并进去
+                foreach (var def in EnginePartCatalog.DefaultParts())
+                {
+                    var cur = catalog.parts.Find(p => p.id == def.id);
+                    if (cur == null) { catalog.parts.Add(def); continue; }
+                    var merged = cur.sensors.ToList();
+                    foreach (var s in def.sensors) if (!merged.Contains(s)) merged.Add(s);
+                    cur.sensors = merged.ToArray();
+                }
+                EditorUtility.SetDirty(catalog);
+                return catalog;
+            }
 
             catalog = EnginePartCatalog.CreateDefault();
             catalog.name = "EnginePartCatalog";
@@ -231,10 +244,40 @@ namespace EngineTwin.Editor
             so.FindProperty("tipPrefab").objectReferenceValue = tipVariant;
             so.FindProperty("curvePrefab").objectReferenceValue = curvePrefab;
             so.FindProperty("uiFont").objectReferenceValue = font;
+            so.FindProperty("clipShader").objectReferenceValue = Shader.Find("EngineTwin/StandardClip");
+            so.FindProperty("fxAlphaMaterial").objectReferenceValue = FxMaterial("FX_AlphaBlended", "Legacy Shaders/Particles/Alpha Blended");
+            so.FindProperty("fxAdditiveMaterial").objectReferenceValue = FxMaterial("FX_Additive", "Legacy Shaders/Particles/Additive");
             so.ApplyModifiedProperties();
 
             EditorSceneManager.MarkSceneDirty(go.scene);
             return true;
+        }
+
+        // ---------- 粒子材质（存为资产，保证打包时着色器被包含） ----------
+
+        static Material FxMaterial(string name, string shaderName)
+        {
+            string texPath = OutDir + "/Materials/FX_SoftDot.asset";
+            var tex = AssetDatabase.LoadAssetAtPath<Texture2D>(texPath);
+            if (tex == null)
+            {
+                tex = EngineEffects.SoftDot();
+                AssetDatabase.CreateAsset(tex, texPath);
+            }
+
+            string path = $"{OutDir}/Materials/{name}.mat";
+            var mat = AssetDatabase.LoadAssetAtPath<Material>(path);
+            Shader shader = Shader.Find(shaderName) ?? Shader.Find("Sprites/Default");
+            if (mat == null)
+            {
+                mat = new Material(shader);
+                AssetDatabase.CreateAsset(mat, path);
+            }
+            mat.shader = shader;
+            mat.mainTexture = tex;
+            if (mat.HasProperty("_TintColor")) mat.SetColor("_TintColor", new Color(0.5f, 0.5f, 0.5f, 0.5f));
+            EditorUtility.SetDirty(mat);
+            return mat;
         }
 
         // ---------- SerializedObject 小工具 ----------

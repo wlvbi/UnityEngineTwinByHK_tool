@@ -50,7 +50,8 @@ namespace EngineTwin
                 tip.SetText(text);
                 lastText[part] = text;
 
-                tip.transform.SetParent(transform, true);
+                // 挂到部件分组下：拆装/爆炸时标签跟随部件移动
+                tip.transform.SetParent(part.Group != null ? part.Group : transform, true);
                 part.Tip = tip;
             }
             Destroy(staging);

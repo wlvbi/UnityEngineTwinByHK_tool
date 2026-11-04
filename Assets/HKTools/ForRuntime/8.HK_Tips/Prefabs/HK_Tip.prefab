@@ -37,7 +37,7 @@ Transform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!212 &1761241575220896775
 SpriteRenderer:
-  serializedVersion: 2
+  serializedVersion: 3
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -94,6 +94,7 @@ SpriteRenderer:
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 1
   m_SpriteSortPoint: 0
+  m_BlendShapeWeights: []
 --- !u!65 &3957790560086886180
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -568,8 +569,8 @@ MonoBehaviour:
   isEnableGrowAnim: 1
   growDuration: 0.3
   camRange: {x: 3, y: 10}
-  minimum: 0.5
-  maximum: 1.5
+  minimum: 1.765896
+  maximum: 2.7658958
   isCustomAdvanced: 1
   titleOffSet: 0.2
   lineDefaultWidth: 0.04

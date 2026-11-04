@@ -78,7 +78,7 @@ namespace EngineTwin
                 new EnginePartInfo("waterpump", "水泵", "驱动冷却液在缸体与散热器之间循环。",
                     new[] { "Frt_PulleyWP", "Frt_WP", "Frt_WaterNeck" }, new[] { SensorId.CoolantTemp }, true, new Vector3(0.15f, 0.9f, 1f)),
                 new EnginePartInfo("crank", "曲轴减震轮", "曲轴前端扭振减震器，转速传感器的信号来源。",
-                    new[] { "Frt_Crank" }, new[] { SensorId.Rpm }, true, new Vector3(0.25f, -0.55f, 1f)),
+                    new[] { "Frt_Crank" }, new[] { SensorId.Rpm, SensorId.Vibration }, true, new Vector3(0.25f, -0.55f, 1f)),
                 new EnginePartInfo("beltdrive", "皮带与张紧轮", "多楔皮带驱动水泵与发电机，张紧轮保持皮带张力。",
                     new[] { "Frt_Belt", "Frt_Tens", "Frt_PulleyTens", "Frt_PulleyIdler" }, none, false, new Vector3(-0.9f, 0.1f, 1f)),
                 new EnginePartInfo("exhaust", "排气歧管", "不锈钢 4 合 1 排气头段，安装排气温度传感器。",

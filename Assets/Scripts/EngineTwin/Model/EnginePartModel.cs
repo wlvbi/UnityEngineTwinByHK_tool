@@ -16,7 +16,19 @@ namespace EngineTwin
         /// <summary>HKTools 悬浮提示标签（由 EngineTipPresenter 生成）</summary>
         public HK_TipsCtrl Tip;
 
+        /// <summary>运行时分组节点（拆装/爆炸时整体移动，由 EngineAssembly 创建）</summary>
+        public Transform Group;
+
         public EnginePart(EnginePartInfo info) { Info = info; }
+
+        /// <summary>当前世界包围盒（拆装后位置会变化，聚焦相机时用它）</summary>
+        public Bounds GetWorldBounds()
+        {
+            if (Renderers.Count == 0) return Bounds;
+            Bounds b = Renderers[0].bounds;
+            foreach (var r in Renderers) if (r != null && r.enabled) b.Encapsulate(r.bounds);
+            return b;
+        }
 
         public string Id => Info.id;
         public string DisplayName => Info.displayName;
