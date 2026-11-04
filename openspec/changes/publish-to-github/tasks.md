@@ -10,13 +10,13 @@
 ## 2. 配置远程与推送
 
 - [x] 2.1 向用户获取远程仓库 URL，执行 `git remote add origin <URL>`，验证 `git remote -v` 显示预期地址
-- [ ] 2.2 推送前检查：`git ls-remote origin` 输出为空（若有任何引用，停下来征询用户整合方式，不得 force push）；`git status` 干净；`git ls-files` 中无 Library/Temp/Logs/UserSettings 等目录
-- [ ] 2.3 执行 `git push -u origin master`，验证命令成功退出且 `git status` 显示本地 master 与 origin/master 同步
+- [x] 2.2 推送前检查：`git ls-remote origin` 输出为空（若有任何引用，停下来征询用户整合方式，不得 force push）；`git status` 干净；`git ls-files` 中无 Library/Temp/Logs/UserSettings 等目录
+- [x] 2.3 执行 `git push -u origin master`，验证命令成功退出且 `git status` 显示本地 master 与 origin/master 同步
 
 ## 3. 远端完整性验证（集成检查）
 
-- [ ] 3.1 在临时目录 `git clone <URL>` 并执行 `git lfs pull`，验证 msyh.ttc、V8_Engine.fbx 等大文件实体还原（文件大小与本地一致，不是指针文本），完成后删除临时目录
-- [ ] 3.2 对比远端与本地 `git log --oneline` 提交哈希序列完全一致，且 GitHub 网页上大文件标注 "stored with Git LFS"
+- [x] 3.1 在临时目录 `git clone <URL>` 并执行 `git lfs pull`，验证 msyh.ttc、V8_Engine.fbx 等大文件实体还原（文件大小与本地一致，不是指针文本），完成后删除临时目录
+- [x] 3.2 对比远端与本地 `git log --oneline` 提交哈希序列完全一致，且 GitHub 网页上大文件标注 "stored with Git LFS"
 
 ## Workflow follow-up
 
